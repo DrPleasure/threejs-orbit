@@ -2,7 +2,8 @@
 
 
 const planetsData = [
-    { name: 'Sun', size: 20, distance: 0, texture: 'sun.jpg', orbitSpeed: 0, rotationSpeed: 0.0002, mass: '1.989 × 10^30 kg', diameter: '1,392,700 km', surfaceGravity: '274 m/s²', avgTemperature: '5,500 °C', funFact: 'The Sun is the largest object in our solar system. However, its size is average compared to other stars.' },
+    { name: 'Sun', size: 20, distance: 0, texture: 'sun.jpg', orbitSpeed: 0, rotationSpeed: 0.0002, mass: '1.989 × 10^30 kg', diameter: '1,392,700 km', surfaceGravity: '274 m/s²', avgTemperature: '5,500 °C',   emissive: 0xffffff,
+    funFact: 'The Sun is the largest object in our solar system. However, its size is average compared to other stars.' },
     { name: 'Mercury', size: 1, distance: 25, texture: 'mercury.jpg', orbitSpeed: 0.0000478 * 7, rotationSpeed: 0.000000174 * 7, mass: '3.301 × 10^23 kg', diameter: '4,880 km', surfaceGravity: '3.7 m/s²', avgTemperature: '167 °C', funFact: 'Mercury is the smallest planet in our solar system, and it is shrinking every day!' },
     { name: 'Venus', size: 1.8, distance: 45, texture: 'venus.jpg', orbitSpeed: 0.0000185 * 7, rotationSpeed: -0.000000074 * 7, mass: '4.867 × 10^24 kg', diameter: '12,104 km', surfaceGravity: '8.87 m/s²', avgTemperature: '462 °C', funFact: 'Venus is the brightest natural object in the sky after the moon.' },
     { name: 'Earth', size: 2, distance: 65, texture: 'earth.jpg', orbitSpeed: 0.0000125 * 7, rotationSpeed: 0.000694 * 7, mass: '5.97 × 10^24 kg', diameter: '12,742 km', surfaceGravity: '9.81 m/s²', avgTemperature: '15 °C', funFact: 'Earth is the only planet proven to have life (that we know of).' },
@@ -202,9 +203,9 @@ function onMouseMove(event) {
   function createPlanetName(name) {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
-    context.font = "Bold 14px Arial";
+    context.font = "Bold 18px Helvetica";
     context.fillStyle = "white";
-    context.fillText(name, 0, 14);
+    context.fillText(name, 0, 18);
     const texture = new THREE.CanvasTexture(canvas);
     const material = new THREE.SpriteMaterial({ map: texture });
     const sprite = new THREE.Sprite(material);
@@ -216,31 +217,34 @@ function onMouseMove(event) {
   
   function createPlanet(planetData) {
     return new Promise((resolve) => {
-      const { name, size, distance, texture, orbitSpeed, rotationSpeed } = planetData;
-
+      const { name, size, distance, texture, orbitSpeed, rotationSpeed, emissive } = planetData;
   
       // Load texture
       const loader = new THREE.TextureLoader();
       loader.load(`textures/${texture}`, (planetTexture) => {
         // Create planet geometry and material
-        const geometry = new THREE.SphereGeometry(size, 32, 32);
         const material = new THREE.MeshPhongMaterial({ map: planetTexture, color: 0xffffff });
   
-        // Create planet mesh
+        if (emissive) {
+          material.emissive = new THREE.Color(emissive);
+          material.emissiveMap = planetTexture;
+          material.emissiveIntensity = 0.8;
+        }
+  
+        const geometry = new THREE.SphereGeometry(size, 32, 32);
         const planet = new THREE.Mesh(geometry, material);
         planet.position.set(distance, 0, 0);
   
         planet.userData = { name, orbitSpeed, rotationSpeed };
         scene.add(planet);
         planet.isCelestialObject = true;
-
-        // Add isPlanet property
-        planet.isPlanet = true;
   
         resolve(planet);
       });
     });
   }
+  
+  
 
   function createMoon(moonData, parentPlanet) {
     return new Promise((resolve) => {
